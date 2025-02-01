@@ -26,7 +26,7 @@ def initialize_model(name='gemini-1.5-pro',
     return genai_model
 
 
-def upload_files(directory='../media'):
+def upload_files(directory='../data'):
 
     files_to_upload = [{'name': x.replace('.wav', ''), "path": os.path.join(directory, x)} for x in os.listdir(directory) if x.endswith('.wav')]
     uploaded_files = list(genai.list_files())
@@ -41,15 +41,52 @@ def upload_files(directory='../media'):
     print('Uploaded {} files.'.format(upload_count))
     return upload_count
 
+
+def create_prompt():
+
+    prompt = [
+        '''
+        Here is a CSV that contains information about Hindi reading assessments of students.
+        The first column of the CSV contains the filename of the voice recording for that student's assessment.
+        The second column of the CSV contains the level of the content that they are reading in that recording. 
+        The third column of the CSV contains the reading level that has been assigned to that student's recording. 
+        Note that the reading level can never be higher than the level of the content in a recording. 
+        The files with the same display_name have been uploaded into the Gemini system. 
+        Learning from this data, help me assess the reading level of the recordings with the following display_names:  
+        ['0241', '0246', '0253', '0254', '0271'].
+        The content level of these recordings is 6. 
+        Give an answer in JSON format that looks like 
+        {output: [{"filename": [string], "content_level": [int], "reading_level": [int], "reason_for_reading_level": [string]}, {...}, ...]
+        ''',
+        '''
+        CSV with Hindi reading assessments of students: \n
+        filename,content_level,reading_level
+        0003,6,6
+        0004,6,6
+        0011,6,5
+        0012,6,5
+        0020,5,4
+        0024,5,4
+        0072,4,3
+        0085,4,3
+        0098,5,5
+        0177,4,4
+        0194,2,2
+        0297,6,2
+        ''',
+        ]
+
+    audio_files = genai.list_files()
+
+    for f in audio_files:
+        prompt.append(genai.get_file(f.name))
+
+    return prompt
+
 if __name__ == '__main__':
     model = initialize_model()
     upload_files()
-
-
-# myfile = genai.upload_file('../media/0003.wav')
-# print(f"{myfile=}")
-#
-# model = genai.GenerativeModel("gemini-1.5-flash")
-# result = model.generate_content([myfile, "Classify whether the speaker is a fluent reader of Hindi or not. Answer with a Yes or No."])
-# print(f"{result.text=}")
-#
+    prompt = create_prompt()
+    result = model.generate_content(prompt)
+    print(result.text)
+    pass

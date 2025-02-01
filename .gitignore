@@ -1,6 +1,6 @@
 # Custom files
 secret.yaml
-media/*
+data/*
 *.wav
 
 # Byte-compiled / optimized / DLL files
