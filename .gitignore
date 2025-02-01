@@ -1,0 +1,94 @@
+# Custom files
+secret.yaml
+media/*
+*.wav
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+*.dll
+*.pyd
+
+# Distribution / packaging
+.eggs/
+dist/
+build/
+sdist/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Installer files
+*.manifest
+*.spec
+
+# PyInstaller
+build/
+dist/
+*.spec
+pyinstaller.log
+
+# Unit test / coverage reports
+.coverage
+nosetests.xml
+coverage.xml
+*.cover
+*.prof
+
+# Translations
+*.mo
+*.pot
+
+# Environments
+.venv
+venv/
+env/
+ENV/
+virtualenv/
+virtualenv_run/
+*.virtualenv
+*.env
+
+# JetBrains PyCharm
+.idea/
+*.iml
+out/
+*.iws
+
+# OS generated files
+.DS_Store
+ehthumbs.db
+Thumbs.db
+._*
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.pyc
+
+# Python specific
+*.py[cod]
+*.egg-info
+*.whl
+
+# User files
+*.user
+*.suo
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Optional: Specific files or folders you want to ignore
+# Example:
+# secret_key.py
+# data/
+
+# Ignore temporary files created by IDE
+*.py.class
