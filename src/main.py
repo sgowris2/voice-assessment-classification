@@ -48,7 +48,7 @@ def upload_files(directory='../data'):
 
 
 def create_prompt(file_id, text, content_level):
-    text_prompt = _get_prompt_template().format(file_id=file_id, text=text, content_level=content_level)
+    text_prompt = _get_prompt_template(level=content_level).format(file_id=file_id, text=text, content_level=content_level)
 
     prompt = [text_prompt]
 
@@ -143,50 +143,84 @@ def visualize_metrics(results_df: pd.DataFrame, show_plots=True):
         plt.show()
 
 
-def _get_prompt_template():
-    return '''
+def _get_prompt_template(level: int):
+
+    if level < 1 or level > 6:
+        raise Exception('content_level of the text is not within known range.')
+
+    level_rules = {
+        1: ' - If the student is unable to recognize more than 50% of the letters, then reading_level is 1',
+        2: '''
+            - If the student can recognize letters correctly without making more than 3 mistakes, then reading_level is 2.
+            - If the student is not at Level 2, then assign Level 1.
+            ''',
+        3: '''
+            - If the student is able to read words in a one-by-one fashion, and about 3-4 words without making more than 3 mistakes, without breaking the words into letters, and without stopping between words more than 2 times, then reading_level is 3.
+            - If the student is not at Level 3, then assess whether they can recognize letters correctly or not. If they can recognize most letters, then you can assign Level 2.
+            - If the student is not at Level 2, then assign Level 1.
+            ''',
+        4: '''
+            - If the student is able to read a few simple sentences fluently, with 1.5 sentences in continuation with less than 3 mistakes, then the reading_level is 4.
+            - If the student is not at Level 4, then assess whether they can read words one by one, about 5 or more words without making more than 3 mistakes, without breaking the word into letters, and without stopping between words more than 3 times, then assign Level 3.
+            - If the student is not at Level 3, then assess whether they can recognize letters correctly or not. If they can recognize most letters, then you can assign Level 2.
+            - If the student is not at Level 2, then assign Level 1.
+            ''',
+        5: '''
+            - If the student is able to read more than 70% of the text fluently, with 3 sentences in continuation with only few, minor mistakes, then the reading_level is 5.
+            - If the student is not at Level 5, then assess whether they can read a few shorter, simpler sentences fluently, about 2-3 sentences in continuation without making more than 3 mistakes, then assign Level 4.
+            - If the student is not at Level 4, then assess whether they can read words one by one, about 5 or more words without making more than 3 mistakes, without breaking the word into letters, and without stopping between words more than 3 times, then assign Level 3.
+            - If the student is not at Level 3, then assess whether they can recognize letters correctly or not. If they can recognize most letters, then you can assign Level 2.
+            - If the student is not at Level 2, then assign Level 1.
+            ''',
+        6: '''
+            - If the student is able to read more than 70% of the text fluently, with 3 sentences in continuation with only few, minor mistakes, then the reading_level is 6.
+            - If the student is not at Level 6, but is still able to read 50% of the sentences fluently, and can read 2 sentences in continuation without making more than 2 mistakes, but struggles with longer, complex sentences, or has limited comprehension, then assign reading_level of 5.
+            - If the student is not at Level 5, then assess whether they can read a few shorter, simpler sentences fluently, about 2-3 sentences in continuation without making more than 3 mistakes, then assign Level 4.
+            - If the student is not at Level 4, then assess whether they can read words one by one, about 5 or more words without making more than 3 mistakes, without breaking the word into letters, and without stopping between words more than 3 times, then assign Level 3.
+            - If the student is not at Level 3, then assess whether they can recognize letters correctly or not. If they can recognize most letters, then you can assign Level 2.
+            - If the student is not at Level 2, then assign Level 1. 
+            '''
+    }
+
+    template =  '''
             You are a reading level assessment bot that listens to recordings of students reading text in Hindi, and you need to assess the ability of the student to read.
-            This is not a strict test, but more an assessment of the ability of the student. Mistakes are okay to make but you need to figure out what level a student is capable of using the recording as evidence.
+            This is not a strict test, but more an assessment of the ability of the student. Mistakes are okay to make but you need to figure out what reading_level a student is capable of, using the recording as evidence.
             
             Here is a recording of a student reading some text in Hindi language.
             The actual text (transcript) that the student is reading is the following:
             ```
-            {text}
+            {{text}}
             ```
-            The content level of this text is: Level {content_level}
-            
+            The content_level of this text is: Level {{content_level}}
             
             For the recording file, do the following:
             1. First, create a transcript from the recording.
-            2. Then, assess how what percentage of the actual text was read accurately by the student. You may ignore it if the student omits reading a small word like "है" at the end of a sentence.
-            3. Then, note down differences in terms of fluency, and comprehension of the reading.
-            4. Then, use this information to assign a reading_level for the student in the recording using the following rules:
-                ```
-                1. If the recording is not clear and any assessment is not possible, then assign reading_level of 0.
-                2. The reading_level of a student can never be assigned a level higher than the content_level of the text.
-                3. For texts of any level, if the student is able to read most of the text accurately and reasonable fluently with few mistakes, the reading_level of the student is the same as the content_level.                
-                4. If the student is able to read the text with medium fluency but makes multiple regular mistakes, then the reading_level is 1 level less than the content_level.               
-                5. If the student is struggling to read most of the text correctly, but is able to read some words and phrases correctly, then the reading_level is 2 levels or more below the content_level.
-                6. For texts of content_level of 4 or more, if the student demonstrates ability to recognize letters and simple words, and is able to read short phrases, then the reading_level is Level 3. If the student is unable to read short phrases, then the reading_level is Level 2.
-                7. If the student is only able to read some small basic words and letters, but is unable to read phrases, then level of the student is Level 2.
-                8. If the student is unable to read most of the text correctly, including unable to recognize most words and some letters, then the level of the student is Level 1.
-                ```
-            
+            2. Then, assess how many mistakes are made by the student while reading the text. You may ignore it if the student omits reading a small word like "है" at the end of a sentence.
+            3. Then, calculate approximately what percentage of the text was read correctly and fluently.
+            3. Then, assign a reading_level to the student based on the following rules:
+            ```
+                - If the recording is not clear and any assessment is not possible, then assign reading_level of 0.
+                - The reading_level of a student can never be assigned a level higher than the content_level of the text.
+                {level_specific_rules}
+            ```
             *
             Give an answer in the following valid JSON format:
-            {{
-                "file_id": "{file_id}", 
+            {{{{
+                "file_id": "{{file_id}}", 
                 "recording_transcript": string, 
                 "percent_accuracy": int,
-                "recognizes_letters": bool,
-                "reads_simple_words": bool,
-                "reads_short_phrases": bool,
-                "reads_complex_sentences": bool,
+                "reads_letters_fluently": bool,
+                "reads_simple_words_fluently": bool,
+                "reads_short_phrases_fluently": bool,
+                "reads_simple_sentences_fluently": bool,
+                "reads_paragraphs_fluently": bool,
                 "differences_between_actual_transcript_and_actual_recording": [list of differences as strings], 
                 "reason_for_reading_level": string,
                 "reading_level": integer
-            }}
-            '''
+            }}}}
+            '''.format(level_specific_rules=level_rules[level])
+
+    return template
 
 
 def _get_precision_for_level(df: pd.DataFrame, level: int):
@@ -217,23 +251,23 @@ if __name__ == '__main__':
 
     run_model = False
     run_analysis = True
-    show_plots = True
+    show_plots = False
     output_filepath = '../output/{}.json'.format(datetime.strftime(datetime.now(), format('%d%b-%H%M')))
-    analysis_filepath = '../output/04Feb-0016.json'  # Set to None to use output_filepath, else set an actual filepath
+    analysis_filepath = '../output/03Feb-2024.json'  # Set to None to use output_filepath, else set an actual filepath
 
     level_mapping_df = pd.read_csv('../data/level_mapping.csv', dtype=str)
     level_mapping_df['content_level'] = level_mapping_df['content_level'].astype(int)
     level_mapping_df['reading_level'] = level_mapping_df['reading_level'].astype(int)
     if run_model:
         model = initialize_model(name='gemini-1.5-flash',
-                                 temperature=1,
+                                 temperature=0.6,
                                  top_k=20,
                                  top_p=0.5)
         upload_files()
         count = 0
         results = []
         result_file_content = {
-            'prompt_template': _get_prompt_template(),
+            'prompt_template': _get_prompt_template(6),
             'predictions': []
         }
         for i, row in level_mapping_df.iterrows():
