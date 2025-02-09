@@ -9,8 +9,6 @@
     - Using existing recordings, check accuracy when there are multiple recordings for a student.
     - If successful, suggest design of pilot with multiple recordings per student.
 
-# Work In Progress
-
 ### Stats
 
 - 6829 total entries
@@ -21,3 +19,11 @@
 - 1464 recordings that do not have conflicting level mapping
 - 160 students that have more than 1 recording
 - 348 total recordings across the 160 students
+
+### Next Steps
+- Script to auto-download recordings of students with multiple recordings
+- Run analysis on above recordings.
+- Check accuracy of mapping based on highest level reached per student across recordings:
+    - Actual vs. predicted accuracy across all students
+    - Average RMSE across all students
+- Is this accuracy significantly better than accuracy across individual recordings?
